@@ -10,13 +10,7 @@ pool:
   vmImage: 'ubuntu-latest'
 
 steps:
-- task: DownloadGitHubRelease@0
-  inputs:
-    connection: 'nhdxxwg233'
-    userRepository: 'openwrt'
-    defaultVersionType: 'latest'
-    downloadPath: '$(Pipeline.Workspace)'
-    
+   
 - task: CmdLine@2
   name: Space_cleanup
   inputs:
