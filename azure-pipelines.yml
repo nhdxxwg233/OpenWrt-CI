@@ -18,7 +18,7 @@ steps:
     downloadPath: '$(System.ArtifactsDirectory)'
     
 - task: CmdLine@2
-  name: Space cleanup
+  name: Space_cleanup
   inputs:
     script: |
       docker rmi `docker images -q`
@@ -35,7 +35,7 @@ steps:
     workingDirectory: '$(System.ArtifactsDirectory)/openwrt'
     
 - task: CmdLine@2
-  name: Update feeds
+  name: Update_feeds
   inputs:
     script: |
       ./scripts/feeds update -a
@@ -43,7 +43,7 @@ steps:
     workingDirectory: '$(System.ArtifactsDirectory)/openwrt'
 
 - task: CmdLine@2
-  name: Generate configuration file
+  name: Generate_configuration_file
   inputs:
     script: |
       rm -f ./.config*
@@ -13973,4 +13973,44 @@ steps:
       # ===============================================================
       # 
       sed -i 's/^[ \t]*//g' ./.config
-      make defconfig
+      make defconfig      make defconfig
+
+- task: CmdLine@2
+  name: Make_download
+  inputs:
+    script: |
+      make download -j8 || make download -j1 V=s
+      rm -rf $(find ./dl/ -size -1024c)
+    workingDirectory: '$(System.ArtifactsDirectory)'
+    
+- task: CmdLine@2
+  name: Compile_firmware
+  inputs:
+    script: |
+      make -j$(nproc) || make -j1 V=s
+      echo "======================="
+      echo "Space usage:"
+      echo "======================="
+      df -h
+      echo "======================="
+      du -h ./ --max-depth=1
+      du -h /mnt/openwrt/ --max-depth=1 || true
+    workingDirectory: '$(System.ArtfactsDirectory)'
+    
+- task: CmdLine@2
+  name: Prepare_artifact
+  inputs:
+    script: |
+      mkdir -p ./artifact/firmware
+      mkdir -p ./artifact/package
+      mkdir -p ./artifact/buildinfo
+      rm -rf $(find ./bin/targets/ -type d -name "packages")
+      cp -rf $(find ./bin/targets/ -type f) ./artifact/firmware/
+      cp -rf $(find ./bin/packages/ -type f -name "*.ipk") ./artifact/package/
+      cp -rf $(find ./bin/targets/ -type f -name "*.buildinfo" -o -name "*.manifest") ./artifact/buildinfo/
+    workingDirectory: '$(System.ArtifactsDirectory)'
+    
+- task: PublishPipelineArtifact@1
+  inputs:
+    targetPath: '$(Pipeline.Workspace)'
+    publishLocation: 'pipeline'
