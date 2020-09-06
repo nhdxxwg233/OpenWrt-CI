@@ -13973,7 +13973,7 @@ steps:
       # ===============================================================
       # 
       sed -i 's/^[ \t]*//g' ./.config
-      make defconfig      make defconfig
+      make defconfig
 
 - task: CmdLine@2
   name: Make_download
